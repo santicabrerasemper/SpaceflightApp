@@ -18,6 +18,9 @@ fun Throwable.toUiError(): UiError = when (this) {
     is CancellationException -> throw this
     is UnknownHostException, is ConnectException, is SocketTimeoutException, is IOException -> UiError.Network
     is HttpException -> UiError.Server(code())
-    else -> UiError.Unknown
+    else -> {
+        val msg = (message ?: "").trim()
+        if (msg.isNotEmpty()) UiError.WithMessage(msg) else UiError.Unknown
+    }
 }
 
