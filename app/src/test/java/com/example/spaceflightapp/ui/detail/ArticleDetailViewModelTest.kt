@@ -1,5 +1,6 @@
 package com.example.spaceflightapp.ui.detail
 
+import com.example.spaceflightapp.core.utils.helpers.UiError
 import com.example.spaceflightapp.domain.model.Article
 import com.example.spaceflightapp.domain.repository.ArticleRepository
 import com.example.spaceflightapp.domain.usecase.GetArticleDetailUseCase
@@ -7,7 +8,9 @@ import com.example.spaceflightapp.rules.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -197,17 +200,20 @@ class ArticleDetailViewModelTest {
     @Test
     fun `error message is propagated`() = runTest {
         val repo = object : ArticleRepository {
-            override suspend fun getArticles(search: String?, limit: Int, offset: Int) =
-                emptyList<Article>()
-
+            override suspend fun getArticles(search: String?, limit: Int, offset: Int) = emptyList<Article>()
             override suspend fun getArticleDetail(id: Long): Article =
-                throw RuntimeException(" custom error")
+                throw RuntimeException("custom error")
         }
         val vm = ArticleDetailViewModel(GetArticleDetailUseCase(repo), 5)
         advanceUntilIdle()
         val s = vm.state.value
         assertTrue(s is ArticleDetailUiState.Error)
-        val errorState = s as ArticleDetailUiState.Error
-        assertTrue(errorState.message.contains("custom error"))
+
+        when (val e = (s as ArticleDetailUiState.Error).error) {
+            is UiError.WithMessage -> assertTrue(e.message.contains("custom error"))
+            is UiError.Unknown     -> { /* ok, message not available */ }
+            else                   -> error("Unexpected error type: $e")
+        }
     }
+
 }

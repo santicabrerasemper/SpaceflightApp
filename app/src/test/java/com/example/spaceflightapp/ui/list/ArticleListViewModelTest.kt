@@ -1,5 +1,6 @@
 package com.example.spaceflightapp.ui.list
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.spaceflightapp.domain.model.Article
 import com.example.spaceflightapp.domain.repository.ArticleRepository
 import com.example.spaceflightapp.domain.usecase.GetArticlesUseCase
@@ -17,7 +18,6 @@ class ArticleListViewModelTest {
 
     @get:Rule val mainRule = MainDispatcherRule()
 
-    // Fake repository configurable per test
     private class FakeRepo : ArticleRepository {
         var failNextFirstPage: Boolean = false
         var failNextSecondPage: Boolean = false
@@ -62,7 +62,7 @@ class ArticleListViewModelTest {
 
     @Test
     fun `initial load returns 20 items`() = runTest {
-        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()))
+        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle() // let debounce fire
 
         val s = vm.state.value
@@ -79,7 +79,7 @@ class ArticleListViewModelTest {
                 throw RuntimeException("fail first page")
             override suspend fun getArticleDetail(id: Long) = error("unused")
         }
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
 
         advanceTimeBy(400); advanceUntilIdle()
 
@@ -92,7 +92,7 @@ class ArticleListViewModelTest {
 
     @Test
     fun `query change with debounce resets to first page`() = runTest {
-        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()))
+        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         vm.onQueryChanged("mars")
@@ -107,14 +107,14 @@ class ArticleListViewModelTest {
 
     @Test
     fun `loadNextPage appends and marks endReached`() = runTest {
-        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()))
+        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         vm.loadNextPage()
         advanceUntilIdle()
 
         val s = vm.state.value
-        assertEquals(30, s.items.size) // 20 + 10
+        assertEquals(30, s.items.size)
         assertEquals(20, s.offset)
         assertTrue(s.endReached)
     }
@@ -122,7 +122,7 @@ class ArticleListViewModelTest {
     @Test
     fun `soft refresh failure keeps items`() = runTest {
         val repo = FakeRepo()
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         val before = vm.state.value.items
@@ -150,13 +150,13 @@ class ArticleListViewModelTest {
             override suspend fun getArticleDetail(id: Long) = error("unused")
         }
 
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         vm.loadNextPage(); advanceUntilIdle()
         val afterPage2 = vm.state.value
 
-        vm.loadNextPage(); advanceUntilIdle() // should be ignored
+        vm.loadNextPage(); advanceUntilIdle()
         val afterIgnored = vm.state.value
 
         assertTrue(afterPage2.endReached)
@@ -166,7 +166,7 @@ class ArticleListViewModelTest {
 
     @Test
     fun `rapid query changes only apply the latest one`() = runTest {
-        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()))
+        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         vm.onQueryChanged("m")
@@ -183,7 +183,7 @@ class ArticleListViewModelTest {
     @Test
     fun `pagination error keeps items and sets error`() = runTest {
         val repo = FakeRepo()
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         repo.failNextSecondPage = true
@@ -199,7 +199,7 @@ class ArticleListViewModelTest {
     @Test
     fun `error is cleared after a successful load`() = runTest {
         val repo = FakeRepo().apply { failNextFirstPage = true }
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         assertNotNull(vm.state.value.error)
@@ -218,7 +218,7 @@ class ArticleListViewModelTest {
             override suspend fun getArticles(search: String?, limit: Int, offset: Int) = emptyList<Article>()
             override suspend fun getArticleDetail(id: Long) = error("not used in list tests")
         }
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         val s = vm.state.value
@@ -229,7 +229,7 @@ class ArticleListViewModelTest {
 
     @Test
     fun `multiple refresh calls do not duplicate items or leave loading stuck`() = runTest {
-        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()))
+        val vm = ArticleListViewModel(GetArticlesUseCase(FakeRepo()), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
 
         val before = vm.state.value.items
@@ -245,7 +245,7 @@ class ArticleListViewModelTest {
     @Test
     fun `successful refresh clears error`() = runTest {
         val repo = FakeRepo().apply { failNextFirstPage = true }
-        val vm = ArticleListViewModel(GetArticlesUseCase(repo))
+        val vm = ArticleListViewModel(GetArticlesUseCase(repo), SavedStateHandle())
         advanceTimeBy(400); advanceUntilIdle()
         assertNotNull(vm.state.value.error)
 
