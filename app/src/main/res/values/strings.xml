@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">SpaceflightApp</string>
+    <string name="search_text">Search…</string>
+    <string name="no_results">No results</string>
+    <string name="something_went_wrong_article_list">Something went wrong</string>
+    <string name="retry_article_list">Retry</string>
+    <string name="dot_article">•</string>
+    <string name="card_item_chip_featured_article">Featured</string>
+    <string name="card_item_chip_featured_article_detail">Featured</string>
+    <string name="btn_share_article_detail">Share</string>
+    <string name="open_in_site_article_detail">Open in site</string>
+    <string name="dot_article_detail">•</string>
+    <string name="no_browser_found">No browser was found</string>
+    <string name="no_results_found">No results found</string>
+    <string name="no_results_title">No results</string>
+    <string name="no_results_subtitle">Try different keywords or clear the search.</string>
+    <string name="clear_search">Clear search</string>
+    <string name="connection_lost_title">Connection lost</string>
+    <string name="cd_connection_lost">Connection lost icon</string>
+    <string name="server_error_title">Server error</string>
+    <string name="server_error_detail">Server error (%1$d)</string>
+    <string name="something_went_wrong_title">Something went wrong</string>
+</resources>
