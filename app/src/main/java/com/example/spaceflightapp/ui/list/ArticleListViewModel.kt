@@ -72,11 +72,6 @@ class ArticleListViewModel(
         fetchPage(s.query, s.offset + PAGE_SIZE, append = true)
     }
 
-    fun retry() {
-        val s = _state.value
-        if (s.items.isEmpty()) fetchFirstPage(s.query) else loadNextPage()
-    }
-
     @OptIn(FlowPreview::class)
     private fun observeQuery() {
         viewModelScope.launch {
